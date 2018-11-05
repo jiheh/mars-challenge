@@ -2,7 +2,9 @@ module Main exposing (main)
 
 import Bot exposing (Bot)
 import Browser as Browser exposing (Document)
-import Html exposing (Html, button, div, text)
+import Grid exposing (Cell, Grid)
+import Html exposing (Html, button, div, table, td, text, tr)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Value)
@@ -17,6 +19,9 @@ import Result
 type alias Model =
     { bots : List Bot
     , nodes : List Node
+    , columns : Int
+    , rows : Int
+    , grid : Grid
     , error : Maybe String
     }
 
@@ -25,6 +30,9 @@ initModel : Model
 initModel =
     { bots = []
     , nodes = []
+    , columns = 20
+    , rows = 20
+    , grid = []
     , error = Nothing
     }
 
@@ -84,15 +92,32 @@ update msg model =
 view : Model -> Document Msg
 view model =
     { title = "Central Mining Service Dashboard"
-    , body = getDashboard model
+    , body = renderDashboard model
     }
 
 
-getDashboard : Model -> List (Html Msg)
-getDashboard model =
-    [ div [] [ text "HELLO WORLD" ]
-    , button [ onClick GetData ] [ text "Click ME!" ]
+renderDashboard : Model -> List (Html Msg)
+renderDashboard model =
+    [ button [ onClick GetData ] [ text "Click ME!" ]
+    , gridView model
     ]
+
+
+gridView : Model -> Html Msg
+gridView model =
+    table [ class "grid" ] (renderRows model.grid)
+
+
+renderRows : Grid -> List (Html Msg)
+renderRows rows =
+    rows
+        |> List.map (\row -> tr [] (renderColumns row))
+
+
+renderColumns : List Cell -> List (Html Msg)
+renderColumns cols =
+    cols
+        |> List.map (\cell -> td [] [ text "hi" ])
 
 
 
@@ -110,7 +135,9 @@ subscriptions model =
 
 init : Value -> ( Model, Cmd Msg )
 init flags =
-    ( initModel, Cmd.none )
+    ( { initModel | grid = Grid.generateGrid initModel.rows initModel.columns }
+    , Cmd.none
+    )
 
 
 main : Program Value Model Msg
