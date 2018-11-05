@@ -18,7 +18,7 @@ type alias Node =
 
 getNodes : Http.Request (List Node)
 getNodes =
-    Http.get "http://headlight-tournament-5.herokuapp.com/nodes" decoder
+    Http.get "https://headlight-tournament-5.herokuapp.com/nodes" decoder
 
 
 decoder : Decoder (List Node)

@@ -26,7 +26,7 @@ emptyBot =
 
 getBots : Http.Request (List Bot)
 getBots =
-    Http.get "http://headlight-tournament-5.herokuapp.com/bots" decoder
+    Http.get "https://headlight-tournament-5.herokuapp.com/bots" decoder
 
 
 decoder : Decoder (List Bot)
