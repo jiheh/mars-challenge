@@ -9,7 +9,7 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Value)
 import Node exposing (Node)
-import Result
+import Time
 
 
 
@@ -42,7 +42,7 @@ initModel =
 
 
 type Msg
-    = GetData
+    = GetData Time.Posix
     | UpdateBots (Result Http.Error (List Bot))
     | UpdateNodes (Result Http.Error (List Node))
 
@@ -50,7 +50,7 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GetData ->
+        GetData _ ->
             let
                 cmd =
                     Cmd.batch
@@ -92,32 +92,45 @@ update msg model =
 view : Model -> Document Msg
 view model =
     { title = "Central Mining Service Dashboard"
-    , body = renderDashboard model
+    , body = gridView model
     }
 
 
-renderDashboard : Model -> List (Html Msg)
-renderDashboard model =
-    [ button [ onClick GetData ] [ text "Click ME!" ]
-    , gridView model
-    ]
-
-
-gridView : Model -> Html Msg
+gridView : Model -> List (Html Msg)
 gridView model =
-    table [ class "grid" ] (renderRows model.grid)
+    [ table [ class "grid" ] (renderRows model.grid model.bots model.nodes) ]
 
 
-renderRows : Grid -> List (Html Msg)
-renderRows rows =
+renderRows : Grid -> List Bot -> List Node -> List (Html Msg)
+renderRows rows bots nodes =
     rows
-        |> List.map (\row -> tr [] (renderColumns row))
+        |> List.map (\row -> tr [] (renderColumns row bots nodes))
 
 
-renderColumns : List Cell -> List (Html Msg)
-renderColumns cols =
+renderColumns : List Cell -> List Bot -> List Node -> List (Html Msg)
+renderColumns cols bots nodes =
     cols
-        |> List.map (\cell -> td [] [ text "hi" ])
+        |> List.map (\cell -> renderCell cell bots nodes)
+
+
+renderCell : Cell -> List Bot -> List Node -> Html Msg
+renderCell cell bots nodes =
+    let
+        visitingBot =
+            bots
+                |> List.filter (\b -> b.locationX == cell.x && b.locationY == cell.y)
+                |> List.head
+                |> Maybe.map .id
+                |> Maybe.withDefault ""
+
+        node =
+            nodes
+                |> List.filter (\n -> n.locationX == cell.x && n.locationY == cell.y)
+                |> List.head
+                |> Maybe.map .value
+                |> Maybe.withDefault 0
+    in
+    td [] [ text visitingBot, text (String.fromInt node) ]
 
 
 
@@ -126,7 +139,7 @@ renderColumns cols =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Time.every 1000 GetData
 
 
 
