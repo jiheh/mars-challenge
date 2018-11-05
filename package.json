@@ -5,7 +5,8 @@
   "main": "server/start.js",
   "scripts": {
     "start": "node server/start.js",
-    "build": "webpack --watch"
+    "build": "webpack --watch",
+    "heroku-postbuild": "webpack -p"
   },
   "author": "JR",
   "license": "MIT",

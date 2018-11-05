@@ -6,7 +6,7 @@ module.exports = {
   entry: './src/index.js',
   output: {
     filename: 'bundle.js',
-    path: resolve(__dirname + '/dist')
+    path: resolve(__dirname, 'dist')
   },
   mode: 'development',
   module: {
@@ -29,9 +29,7 @@ module.exports = {
         exclude: [/elm-stuff/, /node_modules/],
         use: {
           loader: 'elm-webpack-loader',
-          options: {
-            debug: true
-          }
+          options: {}
         }
       }
     ],
