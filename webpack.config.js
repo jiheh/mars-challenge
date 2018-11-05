@@ -1,6 +1,8 @@
 'use strict';
 
 const {resolve} = require('path');
+let MODE =
+  process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
 module.exports = {
   entry: './src/index.js',
@@ -8,7 +10,7 @@ module.exports = {
     filename: 'bundle.js',
     path: resolve(__dirname, 'dist')
   },
-  mode: 'development',
+  mode: MODE,
   module: {
     rules: [
       {
@@ -30,7 +32,8 @@ module.exports = {
         use: {
           loader: 'elm-webpack-loader',
           options: {
-            optimize: true
+            optimize: MODE === 'production',
+            debug: MODE === 'development'
           }
         }
       }
