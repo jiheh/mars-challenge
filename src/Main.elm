@@ -69,10 +69,6 @@ update msg model =
                     ( { model | bots = bots }, Cmd.none )
 
                 Err err ->
-                    let
-                        jiheh =
-                            Debug.log "jiheh" err
-                    in
                     ( { model | error = Just "There was an error fetching bots" }
                     , Cmd.none
                     )
