@@ -3,7 +3,10 @@ module Main exposing (main)
 import Browser as Browser exposing (Document)
 import Html exposing (button, div, text)
 import Html.Events exposing (onClick)
+import Http
 import Json.Decode as Decode exposing (Value)
+import Restaurant exposing (Restaurant)
+import Result
 
 
 
@@ -11,12 +14,12 @@ import Json.Decode as Decode exposing (Value)
 
 
 type alias Model =
-    { test : String }
+    { restaurants : List Restaurant }
 
 
 initModel : Model
 initModel =
-    { test = "test" }
+    { restaurants = [] }
 
 
 
@@ -25,7 +28,8 @@ initModel =
 
 type Msg
     = NoOp
-    | UpdateString String
+    | GetRestaurants
+    | UpdateRestaurants (Result Http.Error (List Restaurant))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -34,8 +38,20 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        UpdateString string ->
-            ( { model | test = string }, Cmd.none )
+        GetRestaurants ->
+            ( model, Restaurant.getRestaurants |> Http.send UpdateRestaurants )
+
+        UpdateRestaurants result ->
+            case result of
+                Result.Ok restaurants ->
+                    ( { model | restaurants = restaurants }, Cmd.none )
+
+                Err error ->
+                    let
+                        log =
+                            Debug.log "ERROR" error
+                    in
+                    ( model, Cmd.none )
 
 
 
@@ -46,8 +62,8 @@ view : Model -> Document Msg
 view model =
     let
         body =
-            [ div [] [ text model.test ]
-            , button [ onClick (UpdateString "CLICK") ] [ text "Click ME!" ]
+            [ div [] [ text "HELLO WORLD" ]
+            , button [ onClick GetRestaurants ] [ text "Click ME!" ]
             ]
     in
     { title = "Mars Challenge"
