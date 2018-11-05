@@ -1,4 +1,4 @@
-module Bot exposing (Bot, BotId, getBots)
+module Bot exposing (Bot, BotId, emptyBot, getBots)
 
 import Http
 import Json.Decode as JD exposing (Decoder)
@@ -17,6 +17,11 @@ type alias Bot =
     , score : Int
     , claims : List String
     }
+
+
+emptyBot : Bot
+emptyBot =
+    Bot "" 999 999 0 []
 
 
 getBots : Http.Request (List Bot)

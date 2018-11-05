@@ -3,7 +3,7 @@ module Main exposing (main)
 import Bot exposing (Bot)
 import Browser as Browser exposing (Document)
 import Grid exposing (Cell, Grid)
-import Html exposing (Html, button, div, table, td, text, tr)
+import Html exposing (Html, button, div, h1, table, td, text, tr)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Http
@@ -22,6 +22,7 @@ type alias Model =
     , columns : Int
     , rows : Int
     , grid : Grid
+    , selectedBot : Maybe Bot
     , error : Maybe String
     }
 
@@ -33,6 +34,7 @@ initModel =
     , columns = 20
     , rows = 20
     , grid = []
+    , selectedBot = Nothing
     , error = Nothing
     }
 
@@ -45,6 +47,7 @@ type Msg
     = GetData Time.Posix
     | UpdateBots (Result Http.Error (List Bot))
     | UpdateNodes (Result Http.Error (List Node))
+    | UpdateSelectedBot (Maybe Bot)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -84,6 +87,9 @@ update msg model =
                     , Cmd.none
                     )
 
+        UpdateSelectedBot bot ->
+            ( { model | selectedBot = bot }, Cmd.none )
+
 
 
 -- View
@@ -92,13 +98,21 @@ update msg model =
 view : Model -> Document Msg
 view model =
     { title = "Central Mining Service Dashboard"
-    , body = gridView model
+    , body = renderBody model
     }
 
 
-gridView : Model -> List (Html Msg)
+renderBody : Model -> List (Html Msg)
+renderBody model =
+    [ h1 [] [ text "Central Mining Service Dashboard" ]
+    , gridView model
+    , botInfoView model.selectedBot
+    ]
+
+
+gridView : Model -> Html Msg
 gridView model =
-    [ table [ class "grid" ] (renderRows model.grid model.bots model.nodes) ]
+    table [ class "grid" ] (renderRows model.grid model.bots model.nodes)
 
 
 renderRows : Grid -> List Bot -> List Node -> List (Html Msg)
@@ -116,21 +130,40 @@ renderColumns cols bots nodes =
 renderCell : Cell -> List Bot -> List Node -> Html Msg
 renderCell cell bots nodes =
     let
-        visitingBot =
-            bots
-                |> List.filter (\b -> b.locationX == cell.x && b.locationY == cell.y)
-                |> List.head
-                |> Maybe.map .id
-                |> Maybe.withDefault ""
-
-        node =
+        currentNode =
             nodes
                 |> List.filter (\n -> n.locationX == cell.x && n.locationY == cell.y)
                 |> List.head
                 |> Maybe.map .value
                 |> Maybe.withDefault 0
+
+        visitingBot =
+            bots
+                |> List.filter (\b -> b.locationX == cell.x && b.locationY == cell.y)
+                |> List.head
+
+        visitingBotImage =
+            visitingBot
+                |> Maybe.map (\b -> "\u{1F916}")
+                |> Maybe.withDefault ""
     in
-    td [] [ text visitingBot, text (String.fromInt node) ]
+    td [ onClick (UpdateSelectedBot visitingBot) ]
+        [ text (String.fromInt currentNode)
+        , text visitingBotImage
+        ]
+
+
+botInfoView : Maybe Bot -> Html Msg
+botInfoView bot =
+    case bot of
+        Just selectedBot ->
+            div []
+                [ text ("Id: " ++ selectedBot.id)
+                , text ("Score: " ++ String.fromInt selectedBot.score)
+                ]
+
+        Nothing ->
+            text ""
 
 
 
