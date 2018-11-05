@@ -15,7 +15,7 @@ type alias Restaurant =
 
 getRestaurants : Http.Request (List Restaurant)
 getRestaurants =
-    Http.get "http://opentable.herokuapp.com/api/restaurants?per_page=100&city=Chicago" restaurantsDecoder
+    Http.get "https://opentable.herokuapp.com/api/restaurants?per_page=100&city=Chicago" restaurantsDecoder
 
 
 restaurantsDecoder : Decoder (List Restaurant)

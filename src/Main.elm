@@ -47,10 +47,6 @@ update msg model =
                     ( { model | restaurants = restaurants }, Cmd.none )
 
                 Err error ->
-                    let
-                        log =
-                            Debug.log "ERROR" error
-                    in
                     ( model, Cmd.none )
 
 
