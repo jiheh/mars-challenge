@@ -1,11 +1,12 @@
 module Main exposing (main)
 
+import Bot exposing (Bot)
 import Browser as Browser exposing (Document)
-import Html exposing (button, div, text)
+import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Value)
-import Restaurant exposing (Restaurant)
+import Node exposing (Node)
 import Result
 
 
@@ -14,12 +15,18 @@ import Result
 
 
 type alias Model =
-    { restaurants : List Restaurant }
+    { bots : List Bot
+    , nodes : List Node
+    , error : Maybe String
+    }
 
 
 initModel : Model
 initModel =
-    { restaurants = [] }
+    { bots = []
+    , nodes = []
+    , error = Nothing
+    }
 
 
 
@@ -27,27 +34,47 @@ initModel =
 
 
 type Msg
-    = NoOp
-    | GetRestaurants
-    | UpdateRestaurants (Result Http.Error (List Restaurant))
+    = GetData
+    | UpdateBots (Result Http.Error (List Bot))
+    | UpdateNodes (Result Http.Error (List Node))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
+        GetData ->
+            let
+                cmd =
+                    Cmd.batch
+                        [ Bot.getBots |> Http.send UpdateBots
+                        , Node.getNodes |> Http.send UpdateNodes
+                        ]
+            in
+            ( model, cmd )
 
-        GetRestaurants ->
-            ( model, Restaurant.getRestaurants |> Http.send UpdateRestaurants )
-
-        UpdateRestaurants result ->
+        UpdateBots result ->
             case result of
-                Result.Ok restaurants ->
-                    ( { model | restaurants = restaurants }, Cmd.none )
+                Result.Ok bots ->
+                    ( { model | bots = bots }, Cmd.none )
 
-                Err error ->
-                    ( model, Cmd.none )
+                Err err ->
+                    let
+                        jiheh =
+                            Debug.log "jiheh" err
+                    in
+                    ( { model | error = Just "There was an error fetching bots" }
+                    , Cmd.none
+                    )
+
+        UpdateNodes result ->
+            case result of
+                Result.Ok nodes ->
+                    ( { model | nodes = nodes }, Cmd.none )
+
+                Err _ ->
+                    ( { model | error = Just "There was an error fetching nodes" }
+                    , Cmd.none
+                    )
 
 
 
@@ -56,15 +83,16 @@ update msg model =
 
 view : Model -> Document Msg
 view model =
-    let
-        body =
-            [ div [] [ text "HELLO WORLD" ]
-            , button [ onClick GetRestaurants ] [ text "Click ME!" ]
-            ]
-    in
-    { title = "Mars Challenge"
-    , body = body
+    { title = "Central Mining Service Dashboard"
+    , body = getDashboard model
     }
+
+
+getDashboard : Model -> List (Html Msg)
+getDashboard model =
+    [ div [] [ text "HELLO WORLD" ]
+    , button [ onClick GetData ] [ text "Click ME!" ]
+    ]
 
 
 
